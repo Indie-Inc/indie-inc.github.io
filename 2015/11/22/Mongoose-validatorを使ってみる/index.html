@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Mongooseで非同期Validation | Indie Engineer Blog</title>
+  <meta name="description" content="" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Indie Engineer Blog">
+
+  
+  
+  
+
+  
+</head>
+
+
+<body class="post-template">
+
+  <header class="site-head"  style="background-image: url(//blog.ghost.org/content/images/2013/Nov/cover.png)" >
+    <div class="vertical">
+        <div class="site-head-content inner">
+             <a class="blog-logo" href="/"><img src="//blog.ghost.org/content/images/2013/Nov/bloglogo_1-1.png" alt="Blog Logo"/></a> 
+            <h1 class="blog-title">Indie Engineer Blog</h1>
+            <h2 class="blog-description"></h2>
+        </div>
+    </div>
+</header>
+  
+
+<main class="content" role="main">
+  <article class="post">
+    <span class="post-meta">
+      <time datetime="2015-11-22T07:15:30.000Z" itemprop="datePublished">
+          2015-11-22
+      </time>
+    
+    
+    | 
+    <a href='/tags/mongoDB/'>mongoDB</a>
+    
+    
+</span>
+    <h1 class="post-title">Mongooseで非同期Validation</h1>
+    <section class="post-content">
+      <p>こんばんはtejitakです。今日からIndie Incのエンジニアブログを書き始めます！w</p>
+<h1 id="Mongo_DB_Mongooseで非同期Validation">Mongo DB Mongooseで非同期Validation</h1><p>MongoDBで定義したスキーマのデータを更新するときにvalidationを行うには以下のように行います。</p>
+<h2 id="通常のvalidationを行う例">通常のvalidationを行う例</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// schemaの定義と同時にvalidateを定義する場合</span></span><br><span class="line"><span class="keyword">var</span> mongoose = <span class="built_in">require</span>(<span class="string">'mongoose'</span>);</span><br><span class="line"><span class="keyword">var</span> Schema = mongoose.Schema</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> usernameLengthValidator = (value) =&gt; &#123;</span><br><span class="line">  <span class="comment">// 64文字以上はerror</span></span><br><span class="line">  <span class="keyword">return</span> value.length &lt; <span class="number">64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> User = <span class="keyword">new</span> Schema(&#123;</span><br><span class="line">  <span class="string">"username"</span>: &#123; type: <span class="built_in">String</span>, <span class="keyword">default</span>: <span class="string">''</span>, validator: [&#123;validator: usernameLengthValidator ,</span><br><span class="line">      message: <span class="string">'&#123;VALUE&#125; should be less than 64 characters!'</span>&#125;]&#125;</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// schemaの定義の後にvalidateを定義する場合</span></span><br><span class="line">User.path(<span class="string">'username'</span>).validate(usernameValidator, <span class="string">'&#123;VALUE&#125; should be less than 64 characters!'</span>)</span><br></pre></td></tr></table></figure>
+<p>通常は上記のような方法でvalidateすれば良いのですが、例えばtwitterのuserIdのようなものを想定してみてください。</p>
+<p>Userエントリをデータベースに更新する前に、重複IDが存在するかをDBの中から検索する必要があります。</p>
+<p>mongooseのfindのAPIは非同期のものしか提供されていないため、validationも非同期に行う必要があります。</p>
+<p>非同期validationは以下のコードのようにvalidateの関数の引数にcallbackを足して、処理の終了時にそれを呼んであげれば実現できます。</p>
+<h2 id="非同期にvalidationを行う例">非同期にvalidationを行う例</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// callbackを引数に定義し、非同期処理が完了したタイミングでsuccessならtrue, failならfalseをcallbackに渡して実行する</span></span><br><span class="line"><span class="keyword">var</span> asyncValidator = (value, callback) =&gt; &#123;</span><br><span class="line">  <span class="comment">// Userデータの中に同じusernameが存在するかどうかをcount queryで判別する</span></span><br><span class="line">  <span class="keyword">return</span> mongoose.model(<span class="string">'User'</span>).where(&#123;<span class="string">'username'</span>: value&#125;).count((err, count) =&gt; &#123;</span><br><span class="line">    callback(count === <span class="number">0</span>, <span class="string">'The username is already token!'</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> User = <span class="keyword">new</span> Schema(&#123;</span><br><span class="line">  <span class="string">"username"</span>: &#123; type: <span class="built_in">String</span>, <span class="keyword">default</span>: <span class="string">''</span>, validator: [</span><br><span class="line">    &#123;validator: usernameLengthValidator, message: <span class="string">'&#123;VALUE&#125; should be less than 64 characters!'</span>&#125;,</span><br><span class="line">    &#123;validator: asyncValidator , message: <span class="string">''</span>&#125;</span><br><span class="line">  ]&#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>こんな感じで実装できました。</p>
+<p>後で探してみると <a href="https://www.npmjs.com/package/mongoose-unique-validator" target="_blank" rel="external">mongoose-unique-validator</a> というツールもありました。このライブラリはmongooseのpluginを使って、上記と同様の countクエリーを発行しているようです。</p>
+<p>以上mongoDBに関するTips初投稿でした。<br>こんな感じで些細なTipsなどを共有していこうかなと思っています。</p>
+<p>よろしくお願いします！</p>
+
+    </section>
+    <footer class="post-footer">
+      <section class="author">
+    <h4>Indie Inc.</h4>
+    <p>A designer, developer and entrepreneur. Spends his time travelling the world with a bag of kites. Likes journalism and publishing platforms.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://indie-inc.github.io/2015/11/22/Mongoose-validatorを使ってみる/"
+       onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://indie-inc.github.io/2015/11/22/Mongoose-validatorを使ってみる/"
+       onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://indie-inc.github.io/2015/11/22/Mongoose-validatorを使ってみる/"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/2015/11/21/how-to-setup/">
+        How to Setup Hexo →
+    </a>
+    
+</nav>
+  <div id="comment" class="comments-area">
+    <h1 class="title"><a href="#disqus_comments" name="disqus_comments">Comments</a></h1>
+
+    
+</div>
+</main>
+
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <section class="copyright">All content copyright <a href="/">Indie Engineer Blog</a> &copy; 2014 &bull; All rights reserved.</section>
+     <section class="poweredby">Proudly published with <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>
