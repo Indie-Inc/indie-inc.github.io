@@ -664,7 +664,7 @@ figure.highlight table > tbody > tr > td {
     background: #fff !important;
 }
 figure.highlight table > tbody > tr > td.gutter {
-    max-width: 40px;
+    max-width: 44px;
     text-align: right;
 }
 figure.highlight pre {
