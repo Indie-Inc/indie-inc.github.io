@@ -60,14 +60,26 @@ time_format: HH:mm:ss
 per_page: 10
 pagination_dir: page
 
-# Extensions
-## Plugins: http://hexo.io/plugins/
-## Themes: http://hexo.io/themes/
-theme: landscape
-
 # Deployment
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
   type: git
   repo: git@github.com:Indie-Inc/Indie-Inc.github.io.git
   branch: master
+
+# Extensions
+## Plugins: http://hexo.io/plugins/
+## Themes: http://hexo.io/themes/
+theme: casper
+
+# Theme Config
+cover: //blog.ghost.org/content/images/2013/Nov/cover.png
+logo: //blog.ghost.org/content/images/2013/Nov/bloglogo_1-1.png
+bio: 'A designer, developer and entrepreneur. Spends his time travelling the world with a bag of kites. Likes journalism and publishing platforms.'
+
+# Content
+excerpt_link: Read More
+
+# Miscellaneous
+rss:
+google_analytics:
