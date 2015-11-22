@@ -12,7 +12,7 @@ $ npm install -g hexo
 
 ### Setup Repository
 ``` bash
-$ git clone https://github.com/Indie-Inc/Indie-Inc.github.io.git
+$ git clone https://github.com/Indie-Inc/indie-inc.github.io.git
 $ cd Indie-Inc.github.io.git
 $ npm install
 ```
@@ -20,7 +20,7 @@ $ npm install
 ### Write a Post
 
 ``` bash
-hexo new “your xxxxx title"
+$ hexo new “your xxxxx title"
 ```
 
 Edit the post in source/_posts/your-xxxxx-title.md
@@ -29,7 +29,7 @@ More info: [Writing](http://hexo.io/docs/writing.html)
 
 ### Check on Local Hexo Server
 ``` bash
-hexo server
+$ hexo server
 ```
 Access to [http://localhost:4000/](http://localhost:4000/)
 
@@ -38,6 +38,11 @@ More info: [Server](http://hexo.io/docs/server.html)
 ### Deploy the Post
 Deploy with generating static files
 ``` bash
-hexo deploy -g
+$ hexo deploy -g
 ```
 More info: [Generating](http://hexo.io/docs/generating.html), [Deployment](http://hexo.io/docs/deployment.html)
+
+### Push the Posts to Repository
+``` bash
+$ git push origin hexo
+```
