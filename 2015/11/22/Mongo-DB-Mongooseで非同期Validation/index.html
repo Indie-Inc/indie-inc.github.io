@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-  <title>Mongooseで非同期Validation | Indie Engineer Blog</title>
+  <title>Mongo DB Mongooseで非同期Validation | Indie Engineer Blog</title>
   <meta name="description" content="" />
   <meta name="HandheldFriendly" content="True" />
   <meta name="MobileOptimized" content="320" />
@@ -49,10 +49,10 @@
     
     
 </span>
-    <h1 class="post-title">Mongooseで非同期Validation</h1>
+    <h1 class="post-title">Mongo DB Mongooseで非同期Validation</h1>
     <section class="post-content">
       <p>こんばんはtejitakです。今日からIndie Incのエンジニアブログを書き始めます！w</p>
-<h1 id="Mongo_DB_Mongooseで非同期Validation">Mongo DB Mongooseで非同期Validation</h1><p>MongoDBで定義したスキーマのデータを更新するときにvalidationを行うには以下のように行います。</p>
+<p>MongoDBで定義したスキーマのデータを更新するときにvalidationを行うには以下のように行います。</p>
 <h2 id="通常のvalidationを行う例">通常のvalidationを行う例</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// schemaの定義と同時にvalidateを定義する場合</span></span><br><span class="line"><span class="keyword">var</span> mongoose = <span class="built_in">require</span>(<span class="string">'mongoose'</span>);</span><br><span class="line"><span class="keyword">var</span> Schema = mongoose.Schema</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> usernameLengthValidator = (value) =&gt; &#123;</span><br><span class="line">  <span class="comment">// 64文字以上はerror</span></span><br><span class="line">  <span class="keyword">return</span> value.length &lt; <span class="number">64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> User = <span class="keyword">new</span> Schema(&#123;</span><br><span class="line">  <span class="string">"username"</span>: &#123; type: <span class="built_in">String</span>, <span class="keyword">default</span>: <span class="string">''</span>, validator: [&#123;validator: usernameLengthValidator ,</span><br><span class="line">      message: <span class="string">'&#123;VALUE&#125; should be less than 64 characters!'</span>&#125;]&#125;</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// schemaの定義の後にvalidateを定義する場合</span></span><br><span class="line">User.path(<span class="string">'username'</span>).validate(usernameValidator, <span class="string">'&#123;VALUE&#125; should be less than 64 characters!'</span>)</span><br></pre></td></tr></table></figure>
 <p>通常は上記のような方法でvalidateすれば良いのですが、例えばtwitterのuserIdのようなものを想定してみてください。</p>
 <p>Userエントリをデータベースに更新する前に、重複IDが存在するかをDBの中から検索する必要があります。</p>
@@ -72,15 +72,15 @@
 </section>
       <section class="share">
     <h4>Share this post</h4>
-    <a class="icon-twitter" href="http://twitter.com/share?url=http://indie-inc.github.io/2015/11/22/Mongoose-validatorを使ってみる/"
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://indie-inc.github.io/2015/11/22/Mongo-DB-Mongooseで非同期Validation/"
        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
         <span class="hidden">Twitter</span>
     </a>
-    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://indie-inc.github.io/2015/11/22/Mongoose-validatorを使ってみる/"
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://indie-inc.github.io/2015/11/22/Mongo-DB-Mongooseで非同期Validation/"
        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
         <span class="hidden">Facebook</span>
     </a>
-    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://indie-inc.github.io/2015/11/22/Mongoose-validatorを使ってみる/"
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://indie-inc.github.io/2015/11/22/Mongo-DB-Mongooseで非同期Validation/"
        onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
         <span class="hidden">Google+</span>
     </a>
