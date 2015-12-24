@@ -1,6 +1,7 @@
 title: Mongo DB Mongooseで非同期Validation
 date: 2015-11-22 20:19:45
-tags:
+tags: mongo
+author: tejitak
 ---
 
 こんばんはtejitakです。今日からIndie Incのエンジニアブログを書き始めます！w
