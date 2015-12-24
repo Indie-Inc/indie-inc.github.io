@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Node.jsとGoogle Cloud Vision API使って色々な画像認識試してみた。 | Indie Engineer Blog</title>
+  <meta name="description" content="" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Indie Engineer Blog">
+
+  
+  
+  
+
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-71734615-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+</head>
+
+
+<body class="post-template">
+
+  <header class="site-head"  style="background-image: url(//blog.ghost.org/content/images/2013/Nov/cover.png)" >
+    <div class="vertical">
+        <div class="site-head-content inner">
+             <a class="blog-logo" href="/"><img src="//blog.ghost.org/content/images/2013/Nov/bloglogo_1-1.png" alt="Blog Logo"/></a> 
+            <h1 class="blog-title">Indie Engineer Blog</h1>
+            <h2 class="blog-description"></h2>
+        </div>
+    </div>
+</header>
+  
+
+<main class="content" role="main">
+  <article class="post">
+    <span class="post-meta">
+      <time datetime="2015-12-24T09:24:41.000Z" itemprop="datePublished">
+          2015-12-24
+      </time>
+    
+    
+    | 
+    <a href='/tags/node-google-api/'>node google api</a>
+    
+    
+    
+      by tejitak
+    
+</span>
+
+    <h1 class="post-title">Node.jsとGoogle Cloud Vision API使って色々な画像認識試してみた。</h1>
+    <section class="post-content">
+      <p>Googleから機械学習＆デイープラーニングを駆使した画像認識APIであるCloud Vision APIなるものがLimited Previewでリリースされました。早速使ってみました。</p>
+<h2 id="できること">できること</h2><p>Cloud Vision APIを使うと以下のことができます。</p>
+<table>
+<thead>
+<tr>
+<th>Feature Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FACE_DETECTION</td>
+<td>顔認識</td>
+</tr>
+<tr>
+<td>LANDMARK_DETECTION</td>
+<td>ランドマークの認識</td>
+</tr>
+<tr>
+<td>LOGO_DETECTION</td>
+<td>製品ロゴの認識</td>
+</tr>
+<tr>
+<td>LABEL_DETECTION</td>
+<td>画像コンテンツの認識 (ラベリング)</td>
+</tr>
+<tr>
+<td>TEXT_DETECTION</td>
+<td>画像内テキストの認識 (OCR)</td>
+</tr>
+<tr>
+<td>SAFE_SEARCH_DETECTION</td>
+<td>セーフサーチの判定</td>
+</tr>
+</tbody>
+</table>
+<p>関連日本語記事</p>
+<ul>
+<li>Cloud Vision APIの凄さを伝えるべくRasPi botとビデオを作った話<br><a href="http://qiita.com/kazunori279/items/768c7fdf96cdf45a9d16" target="_blank" rel="external">http://qiita.com/kazunori279/items/768c7fdf96cdf45a9d16</a></li>
+<li>Cloud Vision API はエロ画像をどの程度フィルタできるのか見てみた<br><a href="http://qiita.com/macoshita/items/64ed04d1b8f3883d5532" target="_blank" rel="external">http://qiita.com/macoshita/items/64ed04d1b8f3883d5532</a></li>
+</ul>
+<p>基本的にはREST APIでFeatureを指定して画像をPOSTします。そうすると、指定したFeatureに関する結果が返ってきます。</p>
+<p>現時点のAlpha Previewでのusage limitation（API制限）は以下のようになっています。</p>
+<table>
+<thead>
+<tr>
+<th>Type of Limit</th>
+<th>Usage Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QPS</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1リクエストあたりの画像サイズ(MB)</td>
+<td>8 MB</td>
+</tr>
+<tr>
+<td>1リクエストあたりの画像数</td>
+<td>16</td>
+</tr>
+<tr>
+<td>1日あたりのリクエスト数 (ラベリング以外)</td>
+<td>10,000</td>
+</tr>
+<tr>
+<td>1日あたりのリクエスト数 (ラベリング)</td>
+<td>5,000</td>
+</tr>
+</tbody>
+</table>
+<p>一回のAPI Requestに16枚の画像を含めれて、1日の制限の10,000回API Callすれば、1日で大体16万枚の画像を処理することができそうですね。</p>
+<h2 id="Setup">Setup</h2><p>事前にLimited Previewの使用申請を行ってください。</p>
+<ul>
+<li>Cloud Vision API Limited Preview<br><a href="https://cloud.google.com/vision/" target="_blank" rel="external">https://cloud.google.com/vision/</a></li>
+</ul>
+<p>“Sign Up for the Limited Preview”をクリックして申請。<br>承認されると以下のdocumentにアクセスできるようになる</p>
+<p><a href="https://cloud.google.com/vision/docs/" target="_blank" rel="external">https://cloud.google.com/vision/docs/</a></p>
+<h3 id="Server_Keyの取得">Server Keyの取得</h3><p>Google Cloud PlatformのページでCloud Vision APIを有効にして、API Key(サーバーキー)を取得します。</p>
+<p><a href="https://console.cloud.google.com/apis/api/vision.googleapis.com/overview" target="_blank" rel="external">Cloud PlatformCloud Vision API</a> を開き、”APIを有効にする”ボタンを押します</p>
+<p><a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="external">Cloud PlatformのAPI Credential</a> へ行って、認証情報タブから”新しい認証情報”というボタンをクリックして、APIキーを選択します。</p>
+<img src="/2015/12/24/cloud-vision-api/2015-12-24_19.06.12.png" alt="2015-12-24_19.06.12.png" title="">
+<p>今回はNode.jsでscriptを動かすので、サーバーキーを選択して、そのまま作成ボタンを押します。</p>
+<p>生成されたキーは後ほどコードの中で使用します。</p>
+<h3 id="Nodeモジュール_(node-cloud-vision-api)">Nodeモジュール (node-cloud-vision-api)</h3><p>適当にディレクトリを作って、npm init。そして、cloud vision API用のnode clientのモジュールをinstallする。</p>
+<ul>
+<li>node-cloud-vision-api<br><a href="https://github.com/tejitak/node-cloud-vision-api" target="_blank" rel="external">https://github.com/tejitak/node-cloud-vision-api</a></li>
+</ul>
+<p>（↑良いnode clientがなかったので自作しました。フィードバックなどありましたら、ぜひお知らせください。）</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --save node-cloud-vision-api</span><br></pre></td></tr></table></figure>
+<h3 id="Sample_Code">Sample Code</h3><p>コードは以下のようになります。<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="pi">'use strict'</span></span><br><span class="line"><span class="keyword">const</span> vision = <span class="built_in">require</span>(<span class="string">'node-cloud-vision-api'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// init with auth</span></span><br><span class="line">vision.init(&#123;auth: <span class="string">'YOUR_API_KEY'</span>&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// construct parameters</span></span><br><span class="line"><span class="keyword">const</span> req = <span class="keyword">new</span> vision.Request(&#123;</span><br><span class="line">  image: <span class="keyword">new</span> vision.Image(<span class="string">'/Users/tejitak/temp/test1.jpg'</span>),</span><br><span class="line">  features: [</span><br><span class="line">    <span class="keyword">new</span> vision.Feature(<span class="string">'FACE_DETECTION'</span>, <span class="number">4</span>),</span><br><span class="line">    <span class="keyword">new</span> vision.Feature(<span class="string">'LABEL_DETECTION'</span>, <span class="number">10</span>),</span><br><span class="line">  ]</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// send single request</span></span><br><span class="line">vision.annotate(req).then((res) =&gt; &#123;</span><br><span class="line">  <span class="comment">// handling response</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="built_in">JSON</span>.stringify(res.responses))</span><br><span class="line">&#125;, (e) =&gt; &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Error: '</span>, e)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure></p>
+<p>一つのAPIリクエストで複数の画像を指定したい場合は、以下のようにannotateにrequestの配列を渡します。<br>また、もしWeb上にある画像を直接指定したい場合は以下の２つ目のrequestのようにurlを指定します。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1st image of request is load from local</span></span><br><span class="line"><span class="keyword">const</span> req1 = <span class="keyword">new</span> vision.Request(&#123;</span><br><span class="line">  image: <span class="keyword">new</span> vision.Image(&#123;</span><br><span class="line">    path: <span class="string">'/Users/tejitak/temp/test1.jpg'</span></span><br><span class="line">  &#125;),</span><br><span class="line">  features: [</span><br><span class="line">    <span class="keyword">new</span> vision.Feature(<span class="string">'FACE_DETECTION'</span>, <span class="number">4</span>),</span><br><span class="line">    <span class="keyword">new</span> vision.Feature(<span class="string">'LABEL_DETECTION'</span>, <span class="number">10</span>),</span><br><span class="line">  ]</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2nd image of request is load from Web</span></span><br><span class="line"><span class="keyword">const</span> req2 = <span class="keyword">new</span> vision.Request(&#123;</span><br><span class="line">  image: <span class="keyword">new</span> vision.Image(&#123;</span><br><span class="line">    url: <span class="string">'https://scontent-nrt1-1.cdninstagram.com/hphotos-xap1/t51.2885-15/e35/12353236_1220803437936662_68557852_n.jpg'</span></span><br><span class="line">  &#125;),</span><br><span class="line">  features: [</span><br><span class="line">    <span class="keyword">new</span> vision.Feature(<span class="string">'FACE_DETECTION'</span>, <span class="number">1</span>),</span><br><span class="line">    <span class="keyword">new</span> vision.Feature(<span class="string">'LABEL_DETECTION'</span>, <span class="number">10</span>),</span><br><span class="line">  ]</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// send multi requests by one API call</span></span><br><span class="line">vision.annotate([req1, req2]).then((res) =&gt; &#123;</span><br><span class="line">  <span class="comment">// handling response for each request</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="built_in">JSON</span>.stringify(res.responses))</span><br><span class="line">&#125;, (e) =&gt; &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Error: '</span>, e)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<h2 id="顔認識とラベリングを行うサンプル">顔認識とラベリングを行うサンプル</h2><p>簡単な例としてInstagram上の写真のURLを指定して、どのような結果が取得できるか見てみましょう。</p>
+<p>ちなみに、ドキュメントによると顔認識をするためには、眉毛の間の位置などの測定が重要になるので、推奨画像サイズが    1600 x 1200 なんだそうです。一応 640 x 480 でもうまくは動作するけど、もっと精度を上げたかったら推奨サイズでインプットしてね、だそうです。</p>
+<p>インスタグラムだと 640x640 が一般的なようですが、一応以下に結果を紹介するようにうまく動いているようです。</p>
+<h3 id="サングラスをかけた女性の写真">サングラスをかけた女性の写真</h3><p>まずはInstagram有名人のTaylor Swiftさんから試してみます。<br><img src="https://scontent-nrt1-1.cdninstagram.com/hphotos-xap1/t51.2885-15/e35/12353236_1220803437936662_68557852_n.jpg" alt="Taylor Swiftさん"></p>
+<p>きちんと顔認識されています。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">angerLikelihood: "VERY_UNLIKELY"</span><br><span class="line">blurredLikelihood: "VERY_UNLIKELY"</span><br><span class="line">boundingPoly: Object</span><br><span class="line">detectionConfidence: 0.577574</span><br><span class="line">fdBoundingPoly: Object</span><br><span class="line">headwearLikelihood: "VERY_UNLIKELY"</span><br><span class="line">joyLikelihood: "POSSIBLE"</span><br><span class="line">landmarkingConfidence: 0.19900249</span><br><span class="line">landmarks: Array[34]</span><br><span class="line">panAngle: 0.27318951</span><br><span class="line">rollAngle: 7.2499251</span><br><span class="line">sorrowLikelihood: "VERY_UNLIKELY"</span><br><span class="line">surpriseLikelihood: "VERY_UNLIKELY"</span><br><span class="line">tiltAngle: 11.967749</span><br><span class="line">underExposedLikelihood: "VERY_UNLIKELY</span><br></pre></td></tr></table></figure>
+<p>感情の認識も力を入れいているようで、xxxLikelihood という値が感情別の評価を表しています。今回の写真のケースでは joyLikelihood のみが POSSIBLE で、他は VERY_UNLIKELY なのでJoy(楽しい)という感情として認識されていますね。</p>
+<p>さらにこのlandmarksがすごくて34エントリを展開すると、、<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">0: Object</span><br><span class="line">  position: Object</span><br><span class="line">    x: 342.14697</span><br><span class="line">    y: 77.257805</span><br><span class="line">    z: 0.0010066124</span><br><span class="line">  type: "LEFT_EYE"</span><br><span class="line">1: Object</span><br><span class="line">  position: Object</span><br><span class="line">    x: 524.90961</span><br><span class="line">    y: 100.77812</span><br><span class="line">    z: 0.84962881</span><br><span class="line">  type: "RIGHT_EYE"</span><br><span class="line">2: Object</span><br><span class="line">  position: Object</span><br><span class="line">    x: 285.53159</span><br><span class="line">    y: 30.352997</span><br><span class="line">    z: 25.532389</span><br><span class="line">  type: "LEFT_OF_LEFT_EYEBROW"</span><br><span class="line">3: Object</span><br><span class="line">  position: Object</span><br><span class="line">    x: 395.71207</span><br><span class="line">    y: 32.727783</span><br><span class="line">    z: -25.809153</span><br><span class="line">  type: "RIGHT_OF_LEFT_EYEBROW"</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>こんな感じで、目の場所とか眉毛の場所がpositionの情報付きで返ってきます。その他口とか、顔だけでなく、顔の各パーツが認識されています。</p>
+<p>さらにラベリングの方の結果を見てみましょう。<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">0: Object</span><br><span class="line">  description: "eyewear"</span><br><span class="line">  mid: "/m/0j272k5"</span><br><span class="line">  score: 0.96393067</span><br><span class="line">1: Object</span><br><span class="line">  description: "nose"</span><br><span class="line">  mid: "/m/0k0pj"</span><br><span class="line">  score: 0.86950552</span><br><span class="line">2: Object</span><br><span class="line">  description: "facial expression"</span><br><span class="line">  mid: "/m/01k74n"</span><br><span class="line">  score: 0.86561471</span><br><span class="line">3: Object</span><br><span class="line">  description: "glasses"</span><br><span class="line">  mid: "/m/0jyfg"</span><br><span class="line">  score: 0.76605028</span><br><span class="line">4: Object</span><br><span class="line">  description: "vision care"</span><br><span class="line">  mid: "/m/0h8jxfl"</span><br><span class="line">  score: 0.72531086</span><br><span class="line">5: Object</span><br><span class="line">  description: "smile"</span><br><span class="line">  mid: "/m/019nj4"</span><br><span class="line">  score: 0.57442826</span><br><span class="line">6: Object</span><br><span class="line">  description: "canidae"</span><br><span class="line">  mid: "/m/01z5f"</span><br><span class="line">  score: 0.53674406</span><br></pre></td></tr></table></figure></p>
+<p>ちゃんと eyewear とか glasses とかサングラスであることを認識していますね。<br>そして smile と笑顔であるということも取れています。</p>
+<h3 id="人の集合">人の集合</h3><p>そんな感じで次はInstagramによりフィルター加工された写真にトライ<br><img src="https://igcdn-photos-g-a.akamaihd.net/hphotos-ak-xtp1/t51.2885-15/e15/11265033_1590354827848422_135051294_n.jpg" alt="加工処理済み写真"></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">faceAnnotations</span>: <span class="string">Array[2]</span></span><br><span class="line">  <span class="attribute">0</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">1</span>: <span class="string">Object</span></span><br><span class="line"><span class="attribute">labelAnnotations</span>: <span class="string">Array[4]</span></span><br><span class="line"><span class="attribute">0</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"man"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/04yx4"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.89972556</span></span><br><span class="line"><span class="attribute">1</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"wedding"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/081hv"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.72876191</span></span><br><span class="line"><span class="attribute">2</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"bride"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/0ltfs"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.69205159</span></span><br><span class="line"><span class="attribute">3</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"wedding dress"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/02c66t"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.55351728</span></span><br></pre></td></tr></table></figure>
+<p>ちゃんと人が２人写っていて、weddingとかwedding dressも認識されている！！</p>
+<h3 id="食べ物">食べ物</h3><p>次はカレー<br><img src="https://igcdn-photos-b-a.akamaihd.net/hphotos-ak-xtf1/t51.2885-15/e35/11809865_911873062195873_1036356262_n.jpg" alt="カレー"></p>
+<p>FACE_DETECTIONの結果はなし。ラベリング結果は以下のとおり。<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">0</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"food"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/02wbm"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.992246</span></span><br><span class="line"><span class="attribute">1</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"dish"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/02q08p0"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.98311311</span></span><br><span class="line"><span class="attribute">2</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"gumbo"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/01qf88"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.83931148</span></span><br><span class="line"><span class="attribute">3</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"meal"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/0krfg"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.79317588</span></span><br><span class="line"><span class="attribute">4</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"vegetable"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/0f4s2w"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.61712343</span></span><br><span class="line"><span class="attribute">5</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"curry"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/0hr1s_w"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.60232091</span></span><br><span class="line"><span class="attribute">6</span>: <span class="string">Object</span></span><br><span class="line">  <span class="attribute">description</span>: <span class="string">"gulai"</span></span><br><span class="line">  <span class="attribute">mid</span>: <span class="string">"/m/01x_c"</span></span><br><span class="line">  <span class="attribute">score</span>: <span class="string">0.59999269</span></span><br></pre></td></tr></table></figure></p>
+<p>Foodとして認識されていますね、そしてびっくりしたのが、curry（カレー）であることも認識されている！</p>
+<h3 id="本">本</h3><p>本は認識できるかな？ついでにOCR (TEXT_DETECTION) もかけてみる<br><img src="https://igcdn-photos-c-a.akamaihd.net/hphotos-ak-xtf1/t51.2885-15/e35/11821172_1659394597606938_721829481_n.jpg" alt="本"></p>
+<p>ラベリングの結果<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">0: Object</span><br><span class="line">  description: "poster"</span><br><span class="line">  mid: "/m/01n5jq"</span><br><span class="line">  score: 0.98364943</span><br><span class="line">1: Object</span><br><span class="line">  description: "advertising"</span><br><span class="line">  mid: "/m/011s0"</span><br><span class="line">  score: 0.82112622</span><br><span class="line">2: Object</span><br><span class="line">  description: "party"</span><br><span class="line">  mid: "/m/05_4_"</span><br><span class="line">  score: 0.7021277</span><br><span class="line">3: Object</span><br><span class="line">  description: "graphic design"</span><br><span class="line">  mid: "/m/03c31"</span><br><span class="line">  score: 0.69916856</span><br><span class="line">4: Object</span><br><span class="line">  description: "magazine"</span><br><span class="line">  mid: "/m/058sv"</span><br><span class="line">  score: 0.68585771</span><br><span class="line">5: Object</span><br><span class="line">  description: "tabloid"</span><br><span class="line">  mid: "/m/07mbq"</span><br><span class="line">  score: 0.6555953</span><br><span class="line">6: Object</span><br><span class="line">  description: "newspaper"</span><br><span class="line">  mid: "/m/05jnl"</span><br><span class="line">  score: 0.655531</span><br><span class="line">7: Object</span><br><span class="line">  description: "flyer"</span><br><span class="line">  mid: "/m/0218rg"</span><br><span class="line">  score: 0.5669809</span><br></pre></td></tr></table></figure></p>
+<p>広告的なもの？として認識されているようですが、ちゃんと magazine も入っていますね！<br>OCRの結果はこんな感じでした。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#12486;&#12473;&#12488;&#12418; &#12499;&#12523;&#12489;&#12418; err&#12367;N 7-&#12540;&#12452;&#12472;&#12502;&#12525;&#12451;&#12522;PRESS &#12487;&#12503;&#12525;&#12452;&#12418; &#12477;&#12521;&#12454;&#12489;&#12391;&#21152;&#36895;! &#12514;&#12496;&#12452;&#12523;&#38283; Circle CLDeployGate. Crashlytics... 1&#26085;100&#20740;&#12513;&#12483;&#12475;&#12540;&#12472;&#12434;&#12373;&#12400;&#12367;&#12469;&#12540;&#12499;&#12473;&#12398;&#35023;&#20596; &#38283;&#30330;&#12494;&#12454;&#12495;&#12454; &#22823;&#20844;&#38283; &#12469;&#12540;&#12499;&#12473;&#12398;&#24613;&#25313;&#22823;&#12395;&#32784;&#12360;&#12427;&#12473;&#12465;&#12540;&#12523;&#25126;&#34899; &#12487;&#12540;&#12479;&#12505;&#12540;&#12473;&#35373;&#35336; MOTT loT&#26178;&#20195;&#12398;&#12503;&#12525;&#12488;&#12467;&#12523; &#27425;&#19990;&#20195;&#35328;&#35486;Elixir&#12391;Web&#38283;&#30330; HHVM&#12395;&#12424;&#12427;PHP&#23455;&#34892;&#36895;&#24230;&#12398;&#39640;&#36895;&#21270; &#12480;&#12522;&#12531;&#12464;&#36895;&#24230;&#12398;&#25913;&#21892;&#12494;&#12454;&#12495;&#12454; &#12469;&#23455;&#36341;]</span><br></pre></td></tr></table></figure>
+<p>完璧ではないですが、まぁまぁ取れてますね！</p>
+<h3 id="まとめ">まとめ</h3><p>いやー結構精度の高さにはびっくりしました。試しに使ってみましたが、思ったより断然お手軽に使えます。いろいろな応用ができそうで何か可能性を感じますね。</p>
+<p>今回紹介したnode clientである <a href="https://github.com/tejitak/node-cloud-vision-api" target="_blank" rel="external">node-cloud-vision-api</a> に関しても不具合・ご要望などありましたら、ぜひご連絡ください。</p>
+
+    </section>
+    <footer class="post-footer">
+      <section class="author">
+    <h4>Indie Inc.</h4>
+    <p>A designer, developer and entrepreneur. Spends his time travelling the world with a bag of kites. Likes journalism and publishing platforms.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://indie-inc.github.io/2015/12/24/cloud-vision-api/&amp;text=Node.jsとGoogle Cloud Vision API使って色々な画像認識試してみた。"
+       onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://indie-inc.github.io/2015/12/24/cloud-vision-api/"
+       onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://indie-inc.github.io/2015/12/24/cloud-vision-api/"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/2015/11/22/Mongo-DB-Mongoose-Validate/">
+        Mongo DB Mongooseで非同期Validation →
+    </a>
+    
+</nav>
+</main>
+
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <section class="copyright">All content copyright <a href="/">Indie Engineer Blog</a> &copy; 2014 &bull; All rights reserved.</section>
+     <section class="poweredby">Proudly published with <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>
