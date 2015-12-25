@@ -1,6 +1,6 @@
 title: Mongo DB Mongooseで非同期Validation
 date: 2015-11-22 20:19:45
-tags: node mongo
+tags: ["node", "mongo"]
 author: tejitak
 ---
 

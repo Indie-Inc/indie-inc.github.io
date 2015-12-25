@@ -1,5 +1,4 @@
-<section class="share">
-    <h4>Share this post</h4>
+<section class="share" style="position: static;">
     <a class="icon-twitter" href="http://twitter.com/share?url=<%- permalink %>&amp;text=<%= post.title %>"
        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
         <span class="hidden">Twitter</span>
@@ -9,7 +8,7 @@
         <span class="hidden">Facebook</span>
     </a>
     <a href="http://b.hatena.ne.jp/entry/<%- permalink %>" class="hatena-bookmark-button"
-      data-hatena-bookmark-title="<%= post.title %>" data-hatena-bookmark-layout="simple-balloon"
+      data-hatena-bookmark-title="<%= post.title %>" data-hatena-bookmark-layout="simple"
       title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" />
     </a>
 </section>
