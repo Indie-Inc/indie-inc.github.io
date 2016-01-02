@@ -52,7 +52,7 @@ author: tejitak
 
 Kさんには基本的な疑問からしっかり回答していただいて、これからAndroidアプリ開発を始める私たちにとって大変有意義なものでした。
 
-## Deep Lergning (TensorFlow) Meetup
+## Deep Learning (TensorFlow) Meetup
 こちらも11月下旬に元IBM, 元プレイドのスーパーエンジニアのMさんを招待して、Deep learningの基礎についての勉強会を開催しました。
 
 ![tensorflow](https://scontent-nrt1-1.xx.fbcdn.net/hphotos-xaf1/v/t1.0-0/p296x100/12311072_10153275304585662_8139713260408720213_n.jpg?oh=2362c1b6a9989a39afed5cc455739875&oe=570A2ACC)
