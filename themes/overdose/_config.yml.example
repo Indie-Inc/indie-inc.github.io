@@ -1,0 +1,66 @@
+# main menu navigation
+menu:
+  Home: /
+  About: /about
+  Archives: /archives
+
+# Images
+favicon: /images/logo.svg
+## Post default banner image
+## Please specify width and height for google's structured data (Schema.org SEO)
+default:
+  url: /images/default.jpg
+  width: 1280
+  height: 720
+
+# Font
+## availableFontList: [
+##   'noto-sans-kr',
+##   'spoqa-han-sans-kr',
+##   'spoqa-han-sans-jp'
+## ]
+## If you don't want font, you shouldn't specify the font.
+font:
+
+# Dynamic menu with scrolling
+dynamic_menu: false
+
+# Profile
+profile:
+  image: /images/avatar.jpg
+  gravatar:
+  link:
+  description:
+  social:
+    github:
+    facebook:
+    linkedin:
+    instagram:
+    twitter:
+    rss: /atom.xml
+
+# Footer widgets
+## Don't use over than 3 widgets.
+## availableWidgetList: [
+##   'archives',
+##   'categories',
+##   'recent-posts',
+##   'tag-cloud',
+##   'tags'
+## ]
+## If you don't want widget, you shouldn't specify widgets.
+widgets:
+  - recent-posts
+  - archives
+  - categories
+
+# Other Services
+google_analytics:
+google_site_verification:
+naver_site_verification:
+
+# Open graph
+facebook:
+fb_admin:
+twitter:
+google_plus:
