@@ -2,6 +2,10 @@ title: Indie Incにおける技術的なイベントへの取り組みご紹介
 tags: ["meetup"]
 date: 2015-12-31 12:51:42
 author: tejitak
+banner:
+  url: /2015/12/31/study-meeting/S__21078025.jpg
+  width: 1280
+  height: 720
 ---
 もう2015年大晦日？！
 

@@ -40,7 +40,7 @@ future: true
 highlight:
   enable: true
   line_number: true
-  auto_detect: true
+  auto_detect: false
   tab_replace:
 
 # Category & Tag
@@ -70,7 +70,7 @@ deploy:
 # Extensions
 ## Plugins: http://hexo.io/plugins/
 ## Themes: http://hexo.io/themes/
-theme: casper_indie
+theme: overdose
 
 # Theme Config
 cover: //blog.ghost.org/content/images/2013/Nov/cover.png

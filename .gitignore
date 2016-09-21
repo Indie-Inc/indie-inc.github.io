@@ -1,0 +1,12 @@
+node_modules/
+bower_components/
+data/sitemap.xml
+tmp/
+logs/*.log*
+.DS_Store
+dump.rdb
+npm-debug.log
+:w
+
+# Ignore all swap files
+*.swp

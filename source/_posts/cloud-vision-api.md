@@ -2,6 +2,10 @@ title: Node.jsとGoogle Cloud Vision API使って色々な画像認識試して�
 date: 2015-12-24 18:24:41
 tags: ["node", "google", "api"]
 author: tejitak
+banner:
+  url: /2015/12/24/cloud-vision-api/2015-12-24_19.06.12.png
+  width: 1280
+  height: 720
 ---
 
 Googleから機械学習＆デイープラーニングを駆使した画像認識APIであるCloud Vision APIなるものがLimited Previewでリリースされました。早速使ってみました。
